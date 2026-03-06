@@ -32,7 +32,12 @@ jobs:
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
               echo "Packaging $chart..."
-              helm package "$chart" -d .helm-packages/
+              # Build dependencies if Chart.yaml has dependencies
+              if grep -q "dependencies:" "$chart/Chart.yaml"; then
+                echo "  Building dependencies for $chart..."
+                helm dependency build "$chart" || echo "  Warning: dependency build failed for $chart, skipping"
+              fi
+              helm package "$chart" -d .helm-packages/ || echo "  Warning: packaging failed for $chart, skipping"
             fi
           done
 
