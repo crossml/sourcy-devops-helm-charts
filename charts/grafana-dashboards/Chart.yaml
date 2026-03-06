@@ -1,0 +1,13 @@
+apiVersion: v2
+name: grafana-dashboards
+description: |
+  A Helm chart that provisions Grafana dashboards as ConfigMaps.
+  Dashboards are organized by category (alerts, aws, cicd, databases, etc.)
+  and are automatically discovered by Grafana's sidecar container.
+
+type: application
+version: 0.0.12
+appVersion: "1.0"
+
+maintainers:
+  - name: warehouseexchange

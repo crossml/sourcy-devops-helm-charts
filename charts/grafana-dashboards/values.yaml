@@ -1,0 +1,18 @@
+alerts:
+  enabled: true
+aws:
+  enabled: true
+cicd:
+  enabled: true
+databases:
+  enabled: true
+default:
+  enabled: true
+ingressNginx:
+  enabled: true
+istio:
+  enabled: true
+knative:
+  enabled: true
+kubernetes:
+  enabled: true

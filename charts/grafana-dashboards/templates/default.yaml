@@ -1,0 +1,17 @@
+{{- if .Values.default.enabled }}
+{{- $files := (.Files.Glob "dashboards/default/*.json") }}
+{{- if $files }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-default
+  labels:
+    {{- include "grafana-dashboards.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  {{- range $path, $_ := $files }}
+  {{ $path | base }}: |-
+    {{ $.Files.Get $path | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
