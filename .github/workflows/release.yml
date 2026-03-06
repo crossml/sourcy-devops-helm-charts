@@ -11,17 +11,13 @@ jobs:
   release:
     permissions:
       contents: write
+      pages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -31,36 +27,27 @@ jobs:
           mkdir -p .helm-packages
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
-              echo "Packaging $chart..."
+              echo "--- Packaging $chart ---"
               # Build dependencies if Chart.yaml has dependencies
               if grep -q "dependencies:" "$chart/Chart.yaml"; then
-                echo "  Building dependencies for $chart..."
-                helm dependency build "$chart" || echo "  Warning: dependency build failed for $chart, skipping"
+                echo "  Building dependencies..."
+                helm dependency build "$chart" 2>&1 || true
               fi
-              helm package "$chart" -d .helm-packages/ || echo "  Warning: packaging failed for $chart, skipping"
+              helm package "$chart" -d .helm-packages/ 2>&1 || true
             fi
           done
+          echo "--- Packaged charts ---"
+          ls -la .helm-packages/
 
-      - name: Checkout gh-pages
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Generate index and publish
+      - name: Generate index.yaml
         run: |
-          # Copy packaged charts to gh-pages
-          cp .helm-packages/*.tgz gh-pages/
+          helm repo index .helm-packages/ --url https://crossml.github.io/sourcy-devops-helm-charts/
+          echo "--- index.yaml content ---"
+          cat .helm-packages/index.yaml
 
-          # Generate index.yaml (merge with existing if present)
-          if [ -f gh-pages/index.yaml ]; then
-            helm repo index gh-pages/ --merge gh-pages/index.yaml --url https://crossml.github.io/sourcy-devops-helm-charts/
-          else
-            helm repo index gh-pages/ --url https://crossml.github.io/sourcy-devops-helm-charts/
-          fi
-
-          # Push to gh-pages
-          cd gh-pages
-          git add .
-          git commit -m "Update Helm chart index" || echo "No changes to commit"
-          git push origin gh-pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./.helm-packages
+          keep_files: false
