@@ -30,7 +30,7 @@ jobs:
 
       - name: Add helm repository dependency
         run: |
-          helm repo add sourcy https://crossml.github.io/sourcy-devops-helm-charts/
+          helm repo add sourcy https://crossml.github.io/sourcy-devops-helm-charts/ || true
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
